@@ -6,6 +6,7 @@ local cyanColor = Color3.fromRGB(0, 255, 255)
 local blackColor = Color3.fromRGB(0, 0, 0)
 
 local FarmTab = Window:NewTab("Farm", cyanColor)
+local QuestTab = Window:NewTab("Quest", cyanColor) -- Nova aba para Quests
 local SettingsTab = Window:NewTab("Settings", cyanColor)
 local EspTab = Window:NewTab("ESP", cyanColor)
 
@@ -17,6 +18,7 @@ local walkSpeed = 0
 -- Bone Farming Section
 local BoneFarmSection = FarmTab:NewSection("Auto Farm Bones", blackColor)
 local boneFarming = false
+
 local function boneFarm()
     while boneFarming do
         wait(1)
@@ -37,201 +39,168 @@ BoneFarmSection:NewToggle("Start/Stop Bone Farming", "Toggles automatic bone far
     if boneFarming then boneFarm() end
 end)
 
--- Fruit/Raids Section
-local FruitRaidsTab = Window:NewTab("Fruit/Raids", cyanColor)
-local FruitSection = FruitRaidsTab:NewSection("Auto Collect Fruits", blackColor)
-local fruitCollecting = false
+-- Seção Farm Elite Hunter
+local EliteHunterSection = QuestTab:NewSection("Farm Elite Hunter", blackColor)
+local eliteHunterFarming = false
+local eliteHunterCount = 0 -- Contador de Elite Hunters
 
-local function collectFruits()
-    while fruitCollecting do
-        wait(1)
-        for _, fruit in pairs(workspace:GetChildren()) do
-            if fruit:IsA("Fruit") and fruit:IsTouching(game.Players.LocalPlayer.Character) then
-                fireclickdetector(fruit.ClickDetector)
-                wait(0.5)
-            end
-        end
-    end
-end
-
-FruitSection:NewToggle("Start/Stop Fruit Collecting", "Toggles automatic fruit collecting.", function(state)
-    fruitCollecting = state
-    if fruitCollecting then collectFruits() end
-end)
-
--- Auto Store Fruits Section
-local StoreFruitSection = FruitRaidsTab:NewSection("Auto Store Fruits", blackColor)
-local fruitStoring = false
-
-local function storeFruits()
-    while fruitStoring do
-        wait(1)
-        local player = game.Players.LocalPlayer
-        local inventory = player.Backpack:GetChildren()
-        for _, fruit in ipairs(inventory) do
-            if fruit:IsA("Fruit") then
-                fireclickdetector(fruit.ClickDetector)
-                wait(0.5)
-            end
-        end
-    end
-end
-
-StoreFruitSection:NewToggle("Start/Stop Fruit Storing", "Toggles automatic fruit storing.", function(state)
-    fruitStoring = state
-    if fruitStoring then storeFruits() end
-end)
-
--- Level Farming Section
-local LevelFarmSection = FarmTab:NewSection("Auto Farm Levels", blackColor)
-local autoFarming = false
-
-local function farmLevels()
-    while autoFarming do
-        wait(1)
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-
-        for _, enemy in pairs(workspace:GetChildren()) do
-            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") then
-                local humanoid = enemy.Humanoid
-                if humanoid.Health > 0 then
-                    character:MoveTo(enemy.PrimaryPart.Position + (enemy.PrimaryPart.Position - character.PrimaryPart.Position).unit * farmDistance)
-                    humanoid:TakeDamage(10) -- Adjust damage as needed
-                    wait(0.5)
-                end
-            end
-        end
-    end
-end
-
-LevelFarmSection:NewToggle("Start/Stop Auto Level Farming", "Automatically farms levels.", function(state)
-    autoFarming = state
-    if autoFarming then
-        farmLevels()
-    end
-end)
-
--- Boss Tracker Section
-local BossSection = FarmTab:NewSection("Active Bosses", blackColor)
-local bosses = {
-    "Gorilla King",
-    "Bobby",
-    "The Saw",
-    "Warden",
-    "Chief Warden",
-    "Swan",
-    "Magma Admiral",
-    "Grey Beard",
-    "Vice Admiral",
-    "Fishman Lord",
-    "Wysper",
-    "Thunder God",
-    "Cyborg"
-}
-
-local function updateBossList()
-    BossSection:Clear()
-    for _, bossName in ipairs(bosses) do
-        local boss = workspace:FindFirstChild(bossName)
-        BossSection:NewLabel(boss and boss:IsA("Model") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 and (bossName .. " is alive!") or (bossName .. " is not alive."))
-    end
-end
-
-game:GetService("RunService").Stepped:Connect(updateBossList)
-updateBossList()
-
--- Teleport Section
-local TeleportSection = FarmTab:NewSection("Teleport to the Seas", blackColor)
-
-local function teleportTo(position)
-    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(position)
-end
-
-TeleportSection:NewButton("Teleport to Sea 1", "Teleports to Sea 1.", function() teleportTo(Vector3.new(0, 10, 0)) end)
-TeleportSection:NewButton("Teleport to Sea 2", "Teleports to Sea 2.", function() teleportTo(Vector3.new(3500, 10, 2000)) end)
-TeleportSection:NewButton("Teleport to Sea 3", "Teleports to Sea 3.", function() teleportTo(Vector3.new(12000, 10, 3000)) end)
-
--- Settings Section
-local SettingsSection = SettingsTab:NewSection("Configurations", blackColor)
-
--- Slider for flight speed
-SettingsSection:NewSlider("Flight Speed", "Adjust the player's flight speed.", 500, 0, function(value)
-    flightSpeed = value
+-- Função para aceitar a missão do Elite Hunter
+local function acceptEliteHunterQuest()
     local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    if character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = flightSpeed
-    end
-end)
-
--- Slider for farming distance
-SettingsSection:NewSlider("Farming Distance", "Adjust the farming distance from the NPC.", 30, 0, function(value)
-    farmDistance = value
-    print("Farming distance set to: " .. farmDistance)
-end)
-
--- Slider for walk speed
-SettingsSection:NewSlider("Walk Speed", "Adjust the player's walk speed (0 to 240).", 240, 0, function(value)
-    walkSpeed = value
-    local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
-    if character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.WalkSpeed = walkSpeed
-    end
-end)
-
--- Toggle for notifications
-SettingsSection:NewToggle("Enable Notifications", "Enables/disables notifications in the game.", function(state)
-    if state then
-        print("Notifications enabled.")
+    local questNPC = workspace:FindFirstChild("Elite Hunter Quest NPC") -- Ajuste o nome do NPC
+    if questNPC then
+        player.Character.Humanoid:MoveTo(questNPC.Position)
+        wait(1)
+        fireclickdetector(questNPC.ClickDetector) -- Simula clicar no NPC
     else
-        print("Notifications disabled.")
+        print("NPC da missão não encontrado.")
     end
-end)
-
--- ESP Section
-local EspSection = EspTab:NewSection("Enable ESP", blackColor)
-
-local espEnabled = false
-local function createESP(part)
-    local esp = Instance.new("BoxHandleAdornment")
-    esp.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
-    esp.Adornee = part
-    esp.Color3 = cyanColor -- Cyan color
-    esp.AlwaysOnTop = true
-    esp.ZIndex = 10
-    esp.Transparency = 0.5
-    esp.Parent = part
 end
 
-EspSection:NewToggle("Enable/Disable ESP", "Enables or disables ESP for players and NPCs.", function(state)
-    espEnabled = state
-    for _, child in pairs(workspace:GetChildren()) do
-        if child:IsA("Model") and (child:FindFirstChild("Humanoid") or child:IsA("Part")) then
-            if espEnabled then
-                createESP(child)
-            else
-                for _, adornment in pairs(child:GetChildren()) do
-                    if adornment:IsA("BoxHandleAdornment") then
-                        adornment:Destroy()
-                    end
+-- Função para farmar o Elite Hunter
+local function farmEliteHunter()
+    while eliteHunterFarming do
+        wait(1)
+        local eliteHunter = workspace:FindFirstChild("Elite Hunter") -- Ajuste o nome se necessário
+        if eliteHunter and eliteHunter:IsA("Model") and eliteHunter:FindFirstChild("Humanoid") then
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            character:MoveTo(eliteHunter.PrimaryPart.Position)
+            wait(0.5)
+            eliteHunter.Humanoid:TakeDamage(10) -- Ajuste o dano conforme necessário
+            
+            if eliteHunter.Humanoid.Health <= 0 then
+                eliteHunterCount = eliteHunterCount + 1 -- Incrementa o contador
+                print("Elite Hunter derrotado! Total: " .. eliteHunterCount)
+                
+                -- Verifica se 30 Elite Hunters foram derrotados
+                if eliteHunterCount >= 30 then
+                    print("30 Elite Hunters derrotados. Pronto para pegar a Yama!")
+                    collectYamaSword() -- Coleta a espada Yama
                 end
             end
+            
+            wait(0.5)
+        else
+            print("Caçador de Elite não encontrado.")
+            eliteHunterFarming = false
         end
+    end
+end
+
+EliteHunterSection:NewButton("Aceitar Missão Elite Hunter", "Aceita a missão do Elite Hunter.", function()
+    acceptEliteHunterQuest()
+end)
+
+EliteHunterSection:NewToggle("Iniciar/Parar Farm Elite Hunter", "Alterna o farming automático do Elite Hunter.", function(state)
+    eliteHunterFarming = state
+    if eliteHunterFarming then
+        eliteHunterCount = 0 -- Reseta o contador ao iniciar o farm
+        farmEliteHunter()
     end
 end)
 
--- Aimbot Section
-local AimbotSection = EspTab:NewSection("Aimbot", blackColor)
-local aimbotEnabled = false
+-- Rótulo para exibir o contador
+EliteHunterSection:NewLabel("Elite Hunters Caçados: " .. eliteHunterCount) -- Exibe o contador
 
-local function getClosestEnemy()
-    local closestEnemy = nil
-    local closestDistance = math.huge
+-- Seção para coletar a espada Yama
+local AutoYamaSection = QuestTab:NewSection("Coletar Espada Yama", blackColor)
+local autoCollectYama = false
+
+-- Função para coletar a espada Yama
+local function collectYamaSword()
+    local yamaSwordLocation = workspace:FindFirstChild("Yama Sword") -- Ajuste o nome do objeto
+    if yamaSwordLocation then
+        local player = game.Players.LocalPlayer
+        player.Character.Humanoid:MoveTo(yamaSwordLocation.Position) -- Move para a posição da espada
+        wait(1)
+        fireclickdetector(yamaSwordLocation.ClickDetector) -- Simula clicar na espada
+        print("Espada Yama coletada!")
+    else
+        print("Espada Yama não encontrada.")
+    end
+end
+
+AutoYamaSection:NewToggle("Ativar Coleta de Yama", "Coleta a espada Yama após 30 Elite Hunters derrotados.", function(state)
+    autoCollectYama = state
+    if autoCollectYama and eliteHunterCount >= 30 then
+        collectYamaSword() -- Coleta a espada se o contador estiver correto
+    end
+end)
+
+-- Seção para comprar os Hakis lendários
+local HakiPurchaseSection = QuestTab:NewSection("Comprar Hakis Lendários", blackColor)
+local buyHakis = false
+local currentHaki = "" -- Variável para armazenar o Haki atual
+
+-- Função para comprar os Hakis
+local function buyLegendaryHakis()
     local player = game.Players.LocalPlayer
-    local character = player.Character or player.CharacterAdded:Wait()
+    local hakiNames = {"Busoshoku Haki", "Kenbunshoku Haki", "Haoshoku Haki"} -- Nomes dos Hakis
+    for _, haki in ipairs(hakiNames) do
+        print("Comprando " .. haki)
+        local hakiNPC = workspace:FindFirstChild(haki .. " NPC") -- Ajuste o nome do NPC
+        if hakiNPC then
+            player.Character.Humanoid:MoveTo(hakiNPC.Position)
+            wait(1)
+            fireclickdetector(hakiNPC.ClickDetector) -- Simula clicar no NPC para comprar o Haki
+            currentHaki = haki -- Atualiza o Haki atual
+            HakiPurchaseSection:NewLabel("Haki Atual: " .. currentHaki) -- Atualiza o texto na seção
+        else
+            print(haki .. " NPC não encontrado.")
+        end
+    end
+end
 
-    for _, enemy in pairs(workspace:GetChildren()) do
-        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-            local distance = (character.PrimaryPart.Position - enemy.PrimaryPart.Position).magnitude
+HakiPurchaseSection:NewToggle("Ativar Compra de Hakis", "Compra os três Hakis lendários.", function(state)
+    buyHakis = state
+    if buyHakis then
+        buyLegendaryHakis()
+    end
+end)
+
+-- Rótulo para exibir o Haki atual
+HakiPurchaseSection:NewLabel("Haki Atual: " .. currentHaki) -- Exibe o Haki atual
+
+-- Seção para comprar a True Triple Katana
+local BuyTKKSection = QuestTab:NewSection("Comprar TKK", blackColor)
+local buyTKK = false
+
+-- Função para comprar a True Triple Katana
+local function buyTrueTripleKatana()
+    local player = game.Players.LocalPlayer
+    local tkkNPC = workspace:FindFirstChild("Mysterious Man") -- Ajuste o nome do NPC
+
+    if tkkNPC then
+        player.Character.Humanoid:MoveTo(tkkNPC.Position)
+        wait(1)
+        fireclickdetector(tkkNPC.ClickDetector) -- Simula clicar no NPC para comprar a TKK
+        print("True Triple Katana comprada!")
+    else
+        print("NPC da True Triple Katana não encontrado.")
+    end
+end
+
+BuyTKKSection:NewToggle("Ativar Compra da TKK", "Compra a True Triple Katana.", function(state)
+    buyTKK = state
+    if buyTKK then
+        buyTrueTripleKatana()
+    end
+end)
+
+-- Seção para comprar as espadas lendárias
+local LegendarySwordSection = QuestTab:NewSection("Comprar Espadas Lendárias", blackColor)
+local buySwords = false
+local currentSword = "" -- Variável para armazenar a espada atual
+
+-- Função para comprar as espadas
+local function buyLegendarySwords()
+    local player = game.Players.LocalPlayer
+    local swordNames = {"Saddi", "Shisui", "Wando"} -- Nomes das espadas
+    for _, sword in ipairs(swordNames) do
+        print("Comprando " .. sword)
+        local swordNPC = workspace:FindFirstChild( "
+legendary sword dealer ") -- Ajuste o nome do NPC
+        if swordNPC then
+            player.Character.Humanoid:MoveTo(swordNPC.Position)
+            wait
